@@ -40,10 +40,11 @@ fi
 
 plan="$OUTPUT_DIR/zk-rebuild-plan.json"
 SUBMODULE_COMMIT="${ZK_SUBMODULE_COMMIT:-}"
-if [[ -z "$SUBMODULE_COMMIT" && -d "$ROOT/soroban-privacy-pools/.git" ]]; then
+if [[ -z "$SUBMODULE_COMMIT" ]] && git -C "$ROOT/soroban-privacy-pools" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   SUBMODULE_COMMIT="$(git -C "$ROOT/soroban-privacy-pools" rev-parse HEAD)"
 elif [[ -z "$SUBMODULE_COMMIT" && -f "$ROOT/.gitmodules" ]]; then
-  SUBMODULE_COMMIT="$(git -C "$ROOT" submodule status soroban-privacy-pools | awk '{print $1}' | tr -d '-+')"
+  raw="$(git -C "$ROOT" submodule status -- soroban-privacy-pools | awk '{print $1}')"
+  SUBMODULE_COMMIT="${raw#[-+]}"
 fi
 
 python3 - "$ROOT" "$existing" "$PACKAGE_VERSION" "$plan" "$CDN_ORIGIN" "${ZK_BOOTSTRAP_FROM_VERSION:-0.10.0}" "$SUBMODULE_COMMIT" <<'PY'
