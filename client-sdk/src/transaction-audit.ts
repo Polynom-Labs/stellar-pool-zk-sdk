@@ -4,16 +4,17 @@ import {
   type DepositSlot,
   type WithdrawObject,
   type WithdrawSlot,
-} from './withdrawal-transaction-input';
+} from "./withdrawal-transaction-input";
 
 export const TRANSACTION_N_AUDIT_SLOTS = 4;
 export const SIX_BY_SIX_N_AUDIT_SLOTS = 12;
-export const DEFAULT_APPLICATION_ID = '101';
+export const TEN_BY_ONE_N_AUDIT_SLOTS = 11;
+export const DEFAULT_APPLICATION_ID = "101";
 
 /** BabyJub audit public key (decimal Fr) used in BDD / local demo when env is unset. */
 export const DEMO_AUDIT_PUBLIC_KEY: AuditPublicKey = [
-  '21605515851820432880964235241069234202284600780825340516808373216881770219365',
-  '18856460861531942120859708048677603751294231190189224157283439874962410808705',
+  "21605515851820432880964235241069234202284600780825340516808373216881770219365",
+  "18856460861531942120859708048677603751294231190189224157283439874962410808705",
 ];
 
 export type AuditPublicKey = [string, string];
@@ -30,22 +31,22 @@ export interface TransactionSlotApplicationIds {
 }
 
 function isActiveWithdraw(slot: WithdrawObject): boolean {
-  return slot.value !== '0';
+  return slot.value !== "0";
 }
 
 function isActiveDeposit(slot: DepositObject): boolean {
-  return slot.value !== '0';
+  return slot.value !== "0";
 }
 
 function resolveWithdrawSlot(slot: WithdrawSlot): WithdrawObject | null {
-  if (slot === 'dummy') {
+  if (slot === "dummy") {
     return null;
   }
   return slot;
 }
 
 function resolveDepositSlot(slot: DepositSlot): DepositObject | null {
-  if (slot === 'dummy') {
+  if (slot === "dummy") {
     return null;
   }
   return slot;
@@ -71,11 +72,11 @@ export function resolveSlotApplicationIds(
   return {
     inputApplicationIds: withdrawSlots.map((slot) => {
       const resolved = resolveWithdrawSlot(slot);
-      return resolved && isActiveWithdraw(resolved) ? audit.applicationId : '0';
+      return resolved && isActiveWithdraw(resolved) ? audit.applicationId : "0";
     }),
     outputApplicationIds: depositSlots.map((slot) => {
       const resolved = resolveDepositSlot(slot);
-      return resolved && isActiveDeposit(resolved) ? audit.applicationId : '0';
+      return resolved && isActiveDeposit(resolved) ? audit.applicationId : "0";
     }),
   };
 }

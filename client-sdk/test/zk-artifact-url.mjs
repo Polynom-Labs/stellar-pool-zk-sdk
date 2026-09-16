@@ -37,7 +37,7 @@ assert.equal(typeof ZK_SDK_PACKAGE_VERSION, "string");
 
 const files = defaultZkArtifactFileUrls();
 const base = expectedBase(ZK_ARTIFACT_VERSION);
-assert.equal(ZK_CDN_PROVING_ARTIFACT_FILES.length, 12);
+assert.equal(ZK_CDN_PROVING_ARTIFACT_FILES.length, 18);
 for (const fileName of ZK_CDN_PROVING_ARTIFACT_FILES) {
   assert.equal(files[fileName], `${base}/${fileName}`);
   assert.equal(fileName.includes("verification_key"), false);
@@ -47,9 +47,12 @@ assert.equal(ZK_ARTIFACT_GITHUB_REPO, "Polynom-Labs/stellar-pool-zk-sdk");
 assert.equal(typeof parsedCircuitsManifest(), "object");
 assert.equal(typeof ZK_CIRCUITS_MANIFEST_JSON, "string");
 assert.doesNotMatch(ZK_CIRCUITS_MANIFEST_JSON, /^__ZK_/);
-assert.equal(versionForStem("main"), parsedCircuitsManifest().main?.version
-  ? parsedCircuitsManifest().main.version.replace(/^v/, "")
-  : ZK_SDK_PACKAGE_VERSION);
+assert.equal(
+  versionForStem("main"),
+  parsedCircuitsManifest().main?.version
+    ? parsedCircuitsManifest().main.version.replace(/^v/, "")
+    : ZK_SDK_PACKAGE_VERSION,
+);
 assert.equal(
   zkArtifactFileUrl("main_delegated.graph.bin"),
   `${expectedBase(versionForStem("main_delegated"))}/main_delegated.graph.bin`,
@@ -57,6 +60,10 @@ assert.equal(
 assert.equal(
   zkArtifactFileUrl("main_6x6_delegated_proving_key.bin"),
   `${expectedBase(versionForStem("main_6x6_delegated"))}/main_6x6_delegated_proving_key.bin`,
+);
+assert.equal(
+  zkArtifactFileUrl("main_10x1_delegated_proving_key.bin"),
+  `${expectedBase(versionForStem("main_10x1_delegated"))}/main_10x1_delegated_proving_key.bin`,
 );
 
 console.log("zk-artifact-url: ok");

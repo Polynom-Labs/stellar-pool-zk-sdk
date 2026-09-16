@@ -35,7 +35,7 @@
     "build:ts": "rollup -c",
     "build": "rollup -c",
     "cli": "node dist/cli.js",
-    "test:kyt": "node test/kyt-flow-atomic.mjs && node test/kyt-public-leg-context.mjs && node test/kyt-passage-id-auth.mjs && node test/derived-escrow-key.mjs && node test/spend-scalar-domain.mjs && node test/eighteen-decimal-value.mjs && node test/zk-artifact-url.mjs && node test/no-onboarding-exports.mjs && node test/owner-bound-witness-check.mjs && node test/six-by-six-layout.mjs && node test/six-by-six-witness-proof.mjs",
+    "test:kyt": "node test/kyt-flow-atomic.mjs && node test/kyt-public-leg-context.mjs && node test/kyt-passage-id-auth.mjs && node test/derived-escrow-key.mjs && node test/spend-scalar-domain.mjs && node test/eighteen-decimal-value.mjs && node test/zk-artifact-url.mjs && node test/no-onboarding-exports.mjs && node test/owner-bound-witness-check.mjs && node test/six-by-six-layout.mjs && node test/ten-by-one-layout.mjs && node test/six-by-six-witness-proof.mjs",
     "test:output-note": "node test/output-note-encryption.mjs"
   },
   "dependencies": {

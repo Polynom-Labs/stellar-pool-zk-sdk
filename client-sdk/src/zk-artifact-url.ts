@@ -1,5 +1,4 @@
-export const ZK_ARTIFACT_GITHUB_REPO =
-  "Polynom-Labs/stellar-pool-zk-sdk";
+export const ZK_ARTIFACT_GITHUB_REPO = "Polynom-Labs/stellar-pool-zk-sdk";
 
 export const ZK_SDK_PACKAGE_VERSION = "__ZK_SDK_PACKAGE_VERSION__";
 
@@ -55,6 +54,12 @@ export const ZK_CDN_PROVING_ARTIFACT_FILES = [
   "main_6x6_delegated.graph.bin",
   "main_6x6_delegated.r1cs.gz",
   "main_6x6_delegated_proving_key.bin",
+  "main_10x1.graph.bin",
+  "main_10x1.r1cs.gz",
+  "main_10x1_proving_key.bin",
+  "main_10x1_delegated.graph.bin",
+  "main_10x1_delegated.r1cs.gz",
+  "main_10x1_delegated_proving_key.bin",
 ] as const;
 
 export type ZkCdnProvingArtifactFile =
@@ -97,7 +102,10 @@ export function zkArtifactBaseUrlForVersion(version: string): string {
   ) {
     return trimArtifactBaseUrl(ZK_DEFAULT_ARTIFACT_BASE_URL);
   }
-  if (origin.length === 0 && !ZK_DEFAULT_ARTIFACT_BASE_URL.startsWith("__ZK_")) {
+  if (
+    origin.length === 0 &&
+    !ZK_DEFAULT_ARTIFACT_BASE_URL.startsWith("__ZK_")
+  ) {
     const fallback = trimArtifactBaseUrl(ZK_DEFAULT_ARTIFACT_BASE_URL);
     if (fallback.length > 0) {
       return fallback.replace(/\/stellar\/[^/]+$/, `/stellar/${tag}`);

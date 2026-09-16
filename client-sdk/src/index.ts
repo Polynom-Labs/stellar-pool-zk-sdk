@@ -115,6 +115,7 @@ export {
   LEGACY_ZK_NONCE,
   SIX_BY_SIX_BINDING_ZK_NONCE,
   SIX_BY_SIX_ZK_NONCE,
+  TEN_BY_ONE_ZK_NONCE,
   bundledCircuitFileNames,
   bundledCircuitStem,
   circuitProfileFromName,
@@ -131,6 +132,7 @@ export {
   sixBySixLayout,
   standardBindingLayout,
   standardLayout,
+  tenByOneBindingLayout,
   stateRootIndex,
   totalPublicSignals,
 } from "./zk-layout";

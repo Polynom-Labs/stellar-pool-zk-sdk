@@ -20,6 +20,15 @@
       "publicNInputs": 1,
       "publicNOutputs": 1,
       "nAuditSlots": 12
+    },
+    {
+      "id": "10x1",
+      "stem": "main_10x1",
+      "nIns": 10,
+      "nOuts": 1,
+      "publicNInputs": 0,
+      "publicNOutputs": 1,
+      "nAuditSlots": 11
     }
   ]
 }

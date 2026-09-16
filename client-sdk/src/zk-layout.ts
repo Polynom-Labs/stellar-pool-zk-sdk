@@ -5,19 +5,22 @@ export const COMMITMENT_V2_ZK_NONCE = 2n;
 export const BINDING_ZK_NONCE = 3n;
 export const SIX_BY_SIX_ZK_NONCE = 6n;
 export const SIX_BY_SIX_BINDING_ZK_NONCE = 7n;
+export const TEN_BY_ONE_ZK_NONCE = 10n;
 
 export const LEGACY_PUBLIC_INPUT_PREFIX_LEN = 5;
 export const V2_PUBLIC_INPUT_PREFIX_LEN = 7;
 export const NOTE_AUDIT_LEN = 12;
 export const NOTE_OUTPUT_LEN = 6;
 
-export type CircuitProfileName = '2x2' | '6x6';
+export type CircuitProfileName = '2x2' | '6x6' | '10x1';
 
 export enum BundledZkCircuit {
   TwoByTwo = '2x2',
   SixBySix = '6x6',
+  TenByOne = '10x1',
   TwoByTwoDelegated = '2x2_delegated',
   SixBySixDelegated = '6x6_delegated',
+  TenByOneDelegated = '10x1_delegated',
 }
 
 export interface ZkCircuitLayoutFields {
@@ -63,6 +66,13 @@ export const DEFAULT_ZK_CIRCUITS: Record<string, BundledZkCircuitConfig> = {
     publicNOutputs: 1,
     circuit: BundledZkCircuit.SixBySix,
   },
+  [TEN_BY_ONE_ZK_NONCE.toString()]: {
+    nIns: 10,
+    nOuts: 1,
+    publicNInputs: 0,
+    publicNOutputs: 1,
+    circuit: BundledZkCircuit.TenByOne,
+  },
 };
 
 export function layoutFromCircuitConfig(config: ZkCircuitConfig): ZkLayoutParams {
@@ -94,10 +104,14 @@ export function bundledCircuitStem(circuit: BundledZkCircuit): string {
   switch (circuit) {
     case BundledZkCircuit.SixBySix:
       return 'main_6x6';
+    case BundledZkCircuit.TenByOne:
+      return 'main_10x1';
     case BundledZkCircuit.TwoByTwoDelegated:
       return 'main_delegated';
     case BundledZkCircuit.SixBySixDelegated:
       return 'main_6x6_delegated';
+    case BundledZkCircuit.TenByOneDelegated:
+      return 'main_10x1_delegated';
     default:
       return 'main';
   }
@@ -292,6 +306,10 @@ export function sixBySixBindingLayout(): ZkLayoutParams {
   return zkLayoutFromShapeBinding(6, 6, 1, 1, 12, NOTE_AUDIT_LEN, NOTE_OUTPUT_LEN);
 }
 
+export function tenByOneBindingLayout(): ZkLayoutParams {
+  return zkLayoutFromShapeBinding(10, 1, 0, 1, 11, NOTE_AUDIT_LEN, NOTE_OUTPUT_LEN);
+}
+
 export function layoutForKnownNonce(nonce: bigint): ZkLayoutParams {
   if (nonce === LEGACY_ZK_NONCE) {
     return legacyOwnerBoundLayout();
@@ -308,6 +326,9 @@ export function layoutForKnownNonce(nonce: bigint): ZkLayoutParams {
   if (nonce === SIX_BY_SIX_BINDING_ZK_NONCE) {
     return sixBySixBindingLayout();
   }
+  if (nonce === TEN_BY_ONE_ZK_NONCE) {
+    return tenByOneBindingLayout();
+  }
   throw new Error(`unknown zk config nonce ${nonce.toString()}`);
 }
 
@@ -320,6 +341,15 @@ export function circuitProfileFromName(name: string): CircuitProfile {
       layout: sixBySixBindingLayout(),
       wasmFileName: 'main_6x6.wasm',
       zkeyFileName: 'main_6x6_final.zkey',
+    };
+  }
+  if (normalized === '10x1' || normalized === '10') {
+    return {
+      name: '10x1',
+      nonce: TEN_BY_ONE_ZK_NONCE,
+      layout: tenByOneBindingLayout(),
+      wasmFileName: 'main_10x1.wasm',
+      zkeyFileName: 'main_10x1_final.zkey',
     };
   }
   if (normalized === '2x2' || normalized === 'standard' || normalized === '2') {
@@ -340,6 +370,9 @@ export function circuitProfileFromNonce(nonce: bigint): CircuitProfile {
     nonce === SIX_BY_SIX_BINDING_ZK_NONCE
   ) {
     return circuitProfileFromName('6x6');
+  }
+  if (nonce === TEN_BY_ONE_ZK_NONCE) {
+    return circuitProfileFromName('10x1');
   }
   return circuitProfileFromName('2x2');
 }
