@@ -1,5 +1,5 @@
 {
-  "version": "0.10.1-rc.4",
+  "version": "0.10.1-rc.5",
   "name": "@arcanetech/stellar-privacy-pool-zk-sdk",
   "description": "Client SDK for Soroban Privacy Pools - coin generation, withdrawal proofs, and proof serialization",
   "main": "dist/index.node.mjs",
