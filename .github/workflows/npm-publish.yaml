@@ -17,6 +17,7 @@ jobs:
           ref: ${{ github.ref }}
           submodules: true
           lfs: true
+          token: ${{ secrets.SUBMODULE_PAT }}
       - name: Materialize Git LFS objects
         run: git lfs pull
       - name: Check CDN origin

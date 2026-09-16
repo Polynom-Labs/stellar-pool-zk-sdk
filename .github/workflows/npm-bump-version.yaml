@@ -23,6 +23,7 @@ jobs:
         with:
           ref: ${{ github.ref }}
           submodules: true
+          token: ${{ secrets.SUBMODULE_PAT }}
       - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
