@@ -34,7 +34,7 @@ jobs:
           ZK_ARTIFACT_CDN_ORIGIN: ${{ vars.ZK_ARTIFACT_CDN_ORIGIN }}
           DO_SPACES_BUCKET: ${{ vars.DO_SPACES_BUCKET }}
           DO_SPACES_REGION: ${{ vars.DO_SPACES_REGION }}
-          ZK_BOOTSTRAP_FROM_VERSION: "0.10.1-rc.2"
+          ZK_BOOTSTRAP_FROM_VERSION: "0.10.0"
         run: |
           set -euo pipefail
           chmod +x scripts/*.sh

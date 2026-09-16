@@ -46,7 +46,7 @@ elif [[ -z "$SUBMODULE_COMMIT" && -f "$ROOT/.gitmodules" ]]; then
   SUBMODULE_COMMIT="$(git -C "$ROOT" submodule status soroban-privacy-pools | awk '{print $1}' | tr -d '-+')"
 fi
 
-python3 - "$ROOT" "$existing" "$PACKAGE_VERSION" "$plan" "$CDN_ORIGIN" "${ZK_BOOTSTRAP_FROM_VERSION:-0.10.1-rc.2}" "$SUBMODULE_COMMIT" <<'PY'
+python3 - "$ROOT" "$existing" "$PACKAGE_VERSION" "$plan" "$CDN_ORIGIN" "${ZK_BOOTSTRAP_FROM_VERSION:-0.10.0}" "$SUBMODULE_COMMIT" <<'PY'
 import json, os, subprocess, sys, urllib.error, urllib.request
 root, existing_path, package_version, plan_path, cdn_origin, bootstrap_ver, submodule_commit = sys.argv[1:]
 cdn_origin = cdn_origin.rstrip("/")
