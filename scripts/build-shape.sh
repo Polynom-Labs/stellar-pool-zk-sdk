@@ -45,11 +45,29 @@ make -C "$POOLS" keygen \
   PTAU_PATH="$PTAU_PATH" \
   STEM="$stem"
 
+"$ROOT/scripts/ensure-circom-witness-rs.sh"
+
+# circom-witness-rs only passes CIRCOMLIB as -l. Put the generated main next to
+# pool templates so `include "transaction.circom"` resolves.
+witness_src="$POOLS/circuits/${stem}.circom"
+if [[ "$witness_src" != "$out" ]]; then
+  cp "$out" "$witness_src"
+  cleanup_witness_src=1
+else
+  cleanup_witness_src=0
+fi
+trap 'if [[ "${cleanup_witness_src:-0}" -eq 1 ]]; then rm -f "$witness_src"; fi' EXIT
+
 make -C "$POOLS" witness-graph \
-  MAIN_CIRCOM="$out" \
+  MAIN_CIRCOM="$witness_src" \
   CIRCOM_INCLUDE="$POOLS/circuits" \
   OUTPUT_DIR="$OUTPUT_DIR" \
   STEM="$stem"
+
+if [[ "$cleanup_witness_src" -eq 1 ]]; then
+  rm -f "$witness_src"
+  cleanup_witness_src=0
+fi
 
 make -C "$POOLS" export-proving-keys \
   MAIN_CIRCOM="$out" \

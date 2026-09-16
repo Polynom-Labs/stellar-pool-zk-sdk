@@ -42,6 +42,12 @@ import json, os, subprocess, sys
 plan_path, output_dir, bucket, endpoint, root = sys.argv[1:]
 plan = json.load(open(plan_path, encoding="utf-8"))
 circuits = plan["circuits"]
+immutable_stems = {
+    "main",
+    "main_delegated",
+    "main_6x6",
+    "main_6x6_delegated",
+}
 
 def artifact_names(stem):
     return [
@@ -59,7 +65,10 @@ def content_type(name):
     return "application/octet-stream"
 
 for stem, meta in circuits.items():
-    if not meta.get("rebuild"):
+    if stem in immutable_stems:
+        if meta.get("rebuild"):
+            raise SystemExit(f"refusing to upload already-published stem {stem}")
+        print(f"skip upload {stem} (rebuild=false, keep stellar/{meta.get('version')})")
         continue
     version = meta["version"]
     prefix = f"stellar/{version}"

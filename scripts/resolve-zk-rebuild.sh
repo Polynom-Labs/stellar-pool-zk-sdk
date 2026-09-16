@@ -76,6 +76,11 @@ def object_exists(stem, version):
     except (urllib.error.URLError, TimeoutError, ValueError):
         return False
 
+force_rebuild = {
+    item.strip()
+    for item in os.environ.get("ZK_FORCE_REBUILD_STEMS", "").split(",")
+    if item.strip()
+}
 rebuild = []
 mapping = {}
 for line in stems.splitlines():
@@ -90,7 +95,8 @@ for line in stems.splitlines():
     previous = circuits.get(stem) if isinstance(circuits.get(stem), dict) else {}
     prev_fp = previous.get("fingerprint")
     prev_ver = previous.get("version")
-    if prev_fp == fingerprint and isinstance(prev_ver, str) and prev_ver.strip():
+    published = isinstance(prev_ver, str) and bool(prev_ver.strip())
+    if published and prev_fp == fingerprint:
         mapping[stem] = {
             "version": prev_ver.strip().lstrip("v"),
             "fingerprint": fingerprint,
@@ -98,6 +104,22 @@ for line in stems.splitlines():
             "shapeId": shape_id,
             "rebuild": False,
         }
+        print(f"keep {stem} version={mapping[stem]['version']} (fingerprint match)", file=sys.stderr)
+    elif published and stem not in force_rebuild:
+        # Already on CDN (e.g. 2x2/6x6 at 0.10.0). Never regenerate proving keys
+        # because the fingerprint string changed (path-stable hash, etc.).
+        mapping[stem] = {
+            "version": prev_ver.strip().lstrip("v"),
+            "fingerprint": fingerprint,
+            "kind": kind,
+            "shapeId": shape_id,
+            "rebuild": False,
+        }
+        print(
+            f"keep {stem} version={mapping[stem]['version']} "
+            f"(already published; fingerprint refresh only)",
+            file=sys.stderr,
+        )
     elif manifest_empty and object_exists(stem, bootstrap_ver):
         mapping[stem] = {
             "version": bootstrap_ver,
@@ -107,6 +129,7 @@ for line in stems.splitlines():
             "rebuild": False,
             "bootstrap": True,
         }
+        print(f"bootstrap {stem} version={bootstrap_ver}", file=sys.stderr)
     else:
         rebuild.append(stem)
         mapping[stem] = {
@@ -116,6 +139,7 @@ for line in stems.splitlines():
             "shapeId": shape_id,
             "rebuild": True,
         }
+        print(f"rebuild {stem} version={package_version}", file=sys.stderr)
 plan = {
     "packageVersion": package_version,
     "rebuildStems": rebuild,

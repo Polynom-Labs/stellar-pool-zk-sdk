@@ -35,7 +35,8 @@ trap 'rm -f "$tmp" "$generated"' EXIT
 
 {
   printf 'shape %s kind %s\n' "$SHAPE_ID" "$KIND"
-  printf 'ptau %s\n' "$(hash_file "$PTAU_PATH") $PTAU_PATH"
+  # Canonical ptau id — never include the absolute path (CI vs local would rebuild every stem).
+  printf 'ptau %s ptau/pot20_final.ptau\n' "$(hash_file "$PTAU_PATH")"
   printf 'generated %s\n' "$(hash_file "$generated")"
   if [[ "$KIND" == "delegated" ]]; then
     list=(
