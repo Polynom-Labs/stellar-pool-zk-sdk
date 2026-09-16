@@ -1,0 +1,57 @@
+[package]
+name = "client-sdk-wasm"
+version = "0.1.0"
+edition = "2021"
+
+[package.metadata.wasm-pack.profile.release]
+# Optimize WASM for size (requires wasm-opt from binaryen).
+# Rust 1.87+ emits sign-ext / mutable-globals; older wasm-opt rejects them unless enabled.
+wasm-opt = [
+  "--enable-bulk-memory",
+  "--enable-nontrapping-float-to-int",
+  "--enable-sign-ext",
+  "--enable-mutable-globals",
+  "-Oz",
+]
+
+[profile.release]
+# Smaller binary
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde-wasm-bindgen = "0.6"
+ark-bn254 = "0.5"
+ark-ff = "0.5"
+ark-serialize = "0.5"
+num-bigint = "0.4"
+num-traits = "0.2"
+getrandom = { version = "0.2", features = ["js"] }
+hex = "0.4"
+ark-ec = "0.5"
+cryptography = { path = "../../soroban-privacy-pools/libs/cryptography" }
+sha2 = "0.10"
+anyhow = "1"
+# Groth16 / graph witness (arkworks 0.6, isolated from convert.rs 0.5)
+ark-bn254-zk = { package = "ark-bn254", version = "0.6.0", default-features = false, features = ["curve"] }
+ark-ff-zk = { package = "ark-ff", version = "0.6.0", default-features = false }
+ark-serialize-zk = { package = "ark-serialize", version = "0.6.0", default-features = false, features = ["derive"] }
+ark-groth16 = { version = "0.6.0", default-features = false }
+ark-poly = { version = "0.6.0", default-features = false }
+ark-relations = { version = "0.6.0", default-features = false }
+ark-snark = { version = "0.6.0", default-features = false }
+ark-std = { version = "0.6.0", default-features = false, features = ["std"] }
+circom-witness-rs = { version = "0.3.0", default-features = false }
+ruint = { version = "1.20", default-features = false, features = ["num-bigint"] }
+r1cs-compact = { path = "../../soroban-privacy-pools/libs/r1cs-compact" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rayon = "1.10"

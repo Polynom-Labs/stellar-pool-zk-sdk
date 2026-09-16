@@ -1,0 +1,25 @@
+{
+  "treeDepth": 20,
+  "noteAuditLen": 12,
+  "noteOutputLen": 6,
+  "shapes": [
+    {
+      "id": "2x2",
+      "stem": "main",
+      "nIns": 2,
+      "nOuts": 2,
+      "publicNInputs": 1,
+      "publicNOutputs": 1,
+      "nAuditSlots": 4
+    },
+    {
+      "id": "6x6",
+      "stem": "main_6x6",
+      "nIns": 6,
+      "nOuts": 6,
+      "publicNInputs": 1,
+      "publicNOutputs": 1,
+      "nAuditSlots": 12
+    }
+  ]
+}

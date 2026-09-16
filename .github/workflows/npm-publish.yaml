@@ -1,0 +1,167 @@
+name: NPM Package publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish-npm:
+    permissions:
+      contents: write
+      id-token: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
+          submodules: true
+          lfs: true
+      - name: Materialize Git LFS objects
+        run: git lfs pull
+      - name: Check CDN origin
+        env:
+          ZK_ARTIFACT_CDN_ORIGIN: ${{ vars.ZK_ARTIFACT_CDN_ORIGIN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${ZK_ARTIFACT_CDN_ORIGIN}" ]]; then
+            echo "GitHub Actions variable ZK_ARTIFACT_CDN_ORIGIN is required" >&2
+            exit 1
+          fi
+      - name: Resolve per-shape rebuild vs CDN manifest
+        id: zk-artifacts
+        env:
+          ZK_ARTIFACT_CDN_ORIGIN: ${{ vars.ZK_ARTIFACT_CDN_ORIGIN }}
+          DO_SPACES_BUCKET: ${{ vars.DO_SPACES_BUCKET }}
+          DO_SPACES_REGION: ${{ vars.DO_SPACES_REGION }}
+          ZK_BOOTSTRAP_FROM_VERSION: "0.10.1-rc.2"
+        run: |
+          set -euo pipefail
+          chmod +x scripts/*.sh
+          ZK_PACKAGE_VERSION="$(python3 -c 'import json; print(json.load(open("client-sdk/package.json"))["version"])')"
+          export ZK_PACKAGE_VERSION
+          scripts/resolve-zk-rebuild.sh
+      - name: Check Spaces credentials
+        if: steps.zk-artifacts.outputs.publish_artifacts == 'true'
+        env:
+          DO_SPACES_BUCKET: ${{ vars.DO_SPACES_BUCKET }}
+          DO_SPACES_REGION: ${{ vars.DO_SPACES_REGION }}
+          DO_SPACES_KEY: ${{ secrets.DO_SPACES_KEY }}
+          DO_SPACES_SECRET: ${{ secrets.DO_SPACES_SECRET }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in DO_SPACES_BUCKET DO_SPACES_REGION DO_SPACES_KEY DO_SPACES_SECRET; do
+            if [[ -z "${!name}" ]]; then
+              echo "missing GitHub Actions ${name} (variable or secret)" >&2
+              missing=1
+            fi
+          done
+          if [[ "$missing" -ne 0 ]]; then
+            exit 1
+          fi
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+      - uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: "v0.15.0"
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install circom
+        if: steps.zk-artifacts.outputs.rebuild == 'true'
+        run: |
+          cargo install --git https://github.com/iden3/circom.git
+          circom --version
+      - name: Install JS deps for circuit keygen
+        if: steps.zk-artifacts.outputs.rebuild == 'true'
+        run: |
+          npm i --no-frozen-lockfile --prefix soroban-privacy-pools
+          npm i --no-save --prefix soroban-privacy-pools snarkjs
+      - name: Add npm binaries to PATH
+        if: steps.zk-artifacts.outputs.rebuild == 'true'
+        run: echo "${{ github.workspace }}/soroban-privacy-pools/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Install C++ deps for witness graphs
+        if: steps.zk-artifacts.outputs.rebuild == 'true'
+        run: sudo apt-get update && sudo apt-get install -y nlohmann-json3-dev
+      - name: Build changed shapes
+        if: steps.zk-artifacts.outputs.rebuild == 'true'
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+          PTAU_PATH: ${{ github.workspace }}/ptau/pot20_final.ptau
+          OUTPUT_DIR: ${{ github.workspace }}/artifacts
+          POOLS_DIR: ${{ github.workspace }}/soroban-privacy-pools
+        run: |
+          set -euo pipefail
+          rebuild="${{ steps.zk-artifacts.outputs.rebuild_stems }}"
+          IFS=',' read -r -a wanted <<< "$rebuild"
+          while IFS=$'\t' read -r shape_id kind stem; do
+            for item in "${wanted[@]}"; do
+              if [[ "$item" == "$stem" ]]; then
+                echo "BEGIN build $stem ($shape_id $kind)"
+                ./scripts/build-shape.sh "$shape_id" "$kind"
+                echo "END build $stem"
+              fi
+            done
+          done < <(./scripts/zk-shape-stems.sh)
+      - name: Upload ZK artifacts to the GitHub release
+        if: steps.zk-artifacts.outputs.publish_artifacts == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/upload-zk-release-assets.sh "${{ github.event.release.tag_name }}"
+      - name: Upload proving artifacts to DigitalOcean Spaces
+        if: steps.zk-artifacts.outputs.publish_artifacts == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.DO_SPACES_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.DO_SPACES_SECRET }}
+          DO_SPACES_BUCKET: ${{ vars.DO_SPACES_BUCKET }}
+          DO_SPACES_REGION: ${{ vars.DO_SPACES_REGION }}
+        run: |
+          ZK_SUBMODULE_COMMIT="$(git -C soroban-privacy-pools rev-parse HEAD)"
+          export ZK_SUBMODULE_COMMIT
+          scripts/upload-zk-spaces-assets.sh
+      - name: Build client-sdk
+        env:
+          ZK_ARTIFACT_CDN_ORIGIN: ${{ vars.ZK_ARTIFACT_CDN_ORIGIN }}
+        run: |
+          set -euo pipefail
+          cd client-sdk && npm i --no-frozen-lockfile && npm run build
+      - name: Verify SDK embeds per-stem CDN mapping and omits proving artifacts
+        env:
+          ZK_ARTIFACT_CDN_ORIGIN: ${{ vars.ZK_ARTIFACT_CDN_ORIGIN }}
+        run: |
+          set -euo pipefail
+          origin="${ZK_ARTIFACT_CDN_ORIGIN%/}"
+          dist_js=(client-sdk/dist/index.mjs client-sdk/dist/index.node.mjs)
+          if grep -RF '__ZK_ARTIFACT_CDN_ORIGIN__' "${dist_js[@]}"; then
+            echo "SDK build left the CDN origin placeholder in place" >&2
+            exit 1
+          fi
+          if grep -RF '__ZK_CIRCUITS_MANIFEST_JSON__' "${dist_js[@]}"; then
+            echo "SDK build left the circuits manifest placeholder in place" >&2
+            exit 1
+          fi
+          if grep -RF '__ZK_DEFAULT_ARTIFACT_BASE_URL__' "${dist_js[@]}"; then
+            echo "SDK build left the default CDN URL placeholder in place" >&2
+            exit 1
+          fi
+          if ! grep -Fq "${origin}/stellar/" "${dist_js[@]}"; then
+            echo "SDK build did not embed ${origin}/stellar/" >&2
+            grep -n "stellar" "${dist_js[@]}" >&2 || true
+            exit 1
+          fi
+          pack_dir="$(mktemp -d)"
+          (cd client-sdk && npm pack --pack-destination "$pack_dir")
+          tarball="$(find "$pack_dir" -name '*.tgz' | head -n 1)"
+          test -n "$tarball"
+          if tar -tf "$tarball" | grep -E '\.(zkey|r1cs|bin|gz)$|_verification_key\.json$'; then
+            echo "SDK package must not include proving or verification artifacts" >&2
+            tar -tf "$tarball" >&2
+            exit 1
+          fi
+      - name: "Publish client-sdk"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: cd client-sdk && npm publish --access public --tag ${{ github.ref }}

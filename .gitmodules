@@ -1,0 +1,3 @@
+[submodule "soroban-privacy-pools"]
+	path = soroban-privacy-pools
+	url = git@github.com:Polynom-Labs/stellar-privacy-layer-contracts.git

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+pkg/
+crate/target/
+assets/*.bin
+assets/*.r1cs
+assets/*.wasm

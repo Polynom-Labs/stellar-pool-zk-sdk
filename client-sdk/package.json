@@ -1,0 +1,60 @@
+{
+  "version": "0.10.1-rc.2",
+  "name": "@arcanetech/stellar-privacy-pool-zk-sdk",
+  "description": "Client SDK for Soroban Privacy Pools - coin generation, withdrawal proofs, and proof serialization",
+  "main": "dist/index.node.mjs",
+  "module": "dist/index.mjs",
+  "browser": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/index.mjs",
+      "import": "./dist/index.node.mjs",
+      "default": "./dist/index.node.mjs"
+    },
+    "./sdk.wasm": "./pkg/client_sdk_wasm_bg.wasm",
+    "./pkg/client_sdk_wasm.js": "./pkg/client_sdk_wasm.js"
+  },
+  "bin": {
+    "client-sdk-cli": "./dist/cli.js"
+  },
+  "engines": {
+    "node": ">=19.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Polynom-Labs/stellar-pool-zk-sdk"
+  },
+  "files": [
+    "dist/",
+    "pkg/"
+  ],
+  "scripts": {
+    "build:wasm": "cd crate && wasm-pack build --target web --out-dir ../pkg",
+    "build:ts": "rollup -c",
+    "build": "rollup -c",
+    "cli": "node dist/cli.js",
+    "test:kyt": "node test/kyt-flow-atomic.mjs && node test/kyt-public-leg-context.mjs && node test/kyt-passage-id-auth.mjs && node test/derived-escrow-key.mjs && node test/spend-scalar-domain.mjs && node test/eighteen-decimal-value.mjs && node test/zk-artifact-url.mjs && node test/no-onboarding-exports.mjs && node test/owner-bound-witness-check.mjs && node test/six-by-six-layout.mjs && node test/six-by-six-witness-proof.mjs",
+    "test:output-note": "node test/output-note-encryption.mjs"
+  },
+  "dependencies": {
+    "@noble/hashes": "^2.2.0",
+    "@stellar/stellar-sdk": "^16.0.1",
+    "bech32": "^2.0.0",
+    "circomlibjs": "^0.1.7",
+    "ffjavascript": "^0.3.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-alias": "^5.0.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@types/node": "^20.0.0",
+    "rollup": "^4.0.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "tslib": "^2.6.0",
+    "typescript": "^5.0.0"
+  }
+}
